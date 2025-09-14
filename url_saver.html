@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Saver</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    header {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      width: 100%;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .container {
+      background: white;
+      margin: 20px;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 700px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    input, select, button {
+      padding: 10px;
+      margin: 8px 0;
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .controls select, .controls input {
+      flex: 1;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 15px 0;
+    }
+    li {
+      margin: 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      flex-wrap: wrap;
+    }
+    .link-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-grow: 1;
+      min-width: 200px;
+    }
+    .link-info img {
+      width: 50px;
+      height: 50px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 500;
+      word-break: break-word;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .tag {
+      background: #e9ecef;
+      color: #495057;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    .delete-btn, .edit-btn, .fav-btn {
+      padding: 6px 10px;
+      margin-left: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      border: none;
+      font-size: 12px;
+    }
+    .edit-btn { background: #28a745; color: white; }
+    .delete-btn { background: #dc3545; color: white; }
+    .fav-btn { background: #ffc107; color: #333; }
+    .edit-btn:hover { background: #1e7e34; }
+    .delete-btn:hover { background: #a71d2a; }
+    .fav-btn:hover { background: #e0a800; }
+    .clear-btn, .export-btn, .import-btn {
+      background: #6c757d;
+      color: white;
+      margin-top: 10px;
+    }
+    .clear-btn:hover, .export-btn:hover, .import-btn:hover {
+      background: #495057;
+    }
+    @media (max-width: 600px) {
+      .link-info {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .link-info img {
+        width: 100%;
+        height: auto;
+        max-height: 150px;
+      }
+      li {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .delete-btn, .edit-btn, .fav-btn {
+        margin-top: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>📌 My Saved Links</header>
+  <div class="container">
+    <h2>Add New Link</h2>
+    <input type="text" id="nameInput" placeholder="Enter Name" />
+    <input type="text" id="urlInput" placeholder="Enter URL (https://...)" />
+    <input type="file" id="imgInput" accept="image/*" />
+    <select id="categoryInput">
+      <option value="Work">Work</option>
+      <option value="Personal">Personal</option>
+      <option value="Education">Education</option>
+      <option value="Entertainment">Entertainment</option>
+      <option value="Other">Other</option>
+    </select>
+    <button onclick="saveUrl()">Save Link</button>
+
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="Search by name or category..." onkeyup="renderUrls()" />
+      <select id="filterCategory" onchange="renderUrls()">
+        <option value="all">All Categories</option>
+        <option value="Work">Work</option>
+        <option value="Personal">Personal</option>
+        <option value="Education">Education</option>
+        <option value="Entertainment">Entertainment</option>
+        <option value="Other">Other</option>
+      </select>
+      <select id="sortOption" onchange="renderUrls()">
+        <option value="dateDesc">Newest First</option>
+        <option value="dateAsc">Oldest First</option>
+        <option value="nameAsc">Name A-Z</option>
+        <option value="nameDesc">Name Z-A</option>
+      </select>
+    </div>
+
+    <ul id="urlList"></ul>
+
+    <button class="clear-btn" onclick="clearAll()">Clear All Links</button>
+    <button class="export-btn" onclick="exportLinks()">Export Links</button>
+    <input type="file" id="importInput" accept="application/json" style="display:none" onchange="importLinks(event)" />
+    <button class="import-btn" onclick="document.getElementById('importInput').click()">Import Links</button>
+  </div>
+
+  <script>
+    const nameInput = document.getElementById('nameInput');
+    const urlInput = document.getElementById('urlInput');
+    const imgInput = document.getElementById('imgInput');
+    const categoryInput = document.getElementById('categoryInput');
+    const urlList = document.getElementById('urlList');
+    const searchInput = document.getElementById('searchInput');
+    const filterCategory = document.getElementById('filterCategory');
+    const sortOption = document.getElementById('sortOption');
+
+    let editIndex = -1;
+
+    function saveUrl() {
+      let name = nameInput.value.trim();
+      let url = urlInput.value.trim();
+      let category = categoryInput.value;
+      let file = imgInput.files[0];
+
+      if (!url || !name) return;
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        url = "https://" + url;
+      }
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          saveToStorage(name, url, category, e.target.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        saveToStorage(name, url, category, "");
+      }
+    }
+
+    function saveToStorage(name, url, category, img) {
+      let urls = JSON.parse(localStorage.getItem('urls')) || [];
+      const entry = { name, url, category, img, favorite: false, date: Date.now() };
+      if (editIndex >= 0) {
+        urls[editIndex] = { ...urls[editIndex], ...entry, img: img || urls[editIndex].img };
+        editIndex = -1;
+      } else {
+        urls.push(entry);
+      }
+      localStorage.setItem('urls', JSON.stringify(urls));
+      resetForm();
+      renderUrls();
+    }
+
+    function resetForm() {
+      nameInput.value = "";
+      urlInput.value = "";
+      imgInput.value = "";
+      categoryInput.value = "Work";
+    }
+
+    function deleteUrl(index) {
+      let urls = JSON.parse(localStorage.getItem('urls')) || [];
+      urls.splice(index, 1);
+      localStorage.setItem('urls', JSON.stringify(urls));
+      renderUrls();
+    }
+
+    function editUrl(index) {
+      let urls = JSON.parse(localStorage.getItem('urls')) || [];
+      let item = urls[index];
+      nameInput.value = item.name;
+      urlInput.value = item.url;
+      categoryInput.value = item.category;
+      editIndex = index;
+    }
+
+    function toggleFavorite(index) {
+      let urls = JSON.parse(localStorage.getItem('urls')) || [];
+      urls[index].favorite = !urls[index].favorite;
+      localStorage.setItem('urls', JSON.stringify(urls));
+      renderUrls();
+    }
+
+    function clearAll() {
+      localStorage.removeItem('urls');
+      renderUrls();
+    }
+
+    function exportLinks() {
+      let urls = JSON.parse(localStorage.getItem('urls')) || [];
+      const blob = new Blob([JSON.stringify(urls, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'links_backup.json';
+      link.click();
+    }
+
+    function importLinks(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          localStorage.setItem('urls', JSON.stringify(data));
+          renderUrls();
+        } catch {
+          alert('Invalid file format');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function renderUrls() {
+      urlList.innerHTML = "";
+      let urls = JSON.parse(localStorage.getItem('urls')) || [];
+      let searchTerm = searchInput.value.toLowerCase();
+      let categoryFilter = filterCategory.value;
+
+      // Sorting
+      if (sortOption.value === "nameAsc") urls.sort((a,b)=>a.name.localeCompare(b.name));
+      if (sortOption.value === "nameDesc") urls.sort((a,b)=>b.name.localeCompare(a.name));
+      if (sortOption.value === "dateAsc") urls.sort((a,b)=>a.date-b.date);
+      if (sortOption.value === "dateDesc") urls.sort((a,b)=>b.date-a.date);
+
+      // Favorites always on top
+      urls.sort((a,b)=>b.favorite - a.favorite);
+
+      urls
+        .filter(item => (categoryFilter === "all" || item.category === categoryFilter))
+        .filter(item => item.name.toLowerCase().includes(searchTerm) || item.category.toLowerCase().includes(searchTerm))
+        .forEach((item, index) => {
+          let li = document.createElement('li');
+          let imgTag = item.img ? `<img src="${item.img}" alt="icon">` : "";
+          let favStar = item.favorite ? "⭐" : "☆";
+          li.innerHTML = `
+            <div class="link-info">
+              ${imgTag}
+              <div>
+                <a href="${item.url}" target="_blank">${item.name}</a>
+                <span class="tag">${item.category}</span>
+              </div>
+            </div>
+            <div>
+              <button class="fav-btn" onclick="toggleFavorite(${index})">${favStar}</button>
+              <button class="edit-btn" onclick="editUrl(${index})">Edit</button>
+              <button class="delete-btn" onclick="deleteUrl(${index})">Delete</button>
+            </div>`;
+          urlList.appendChild(li);
+        });
+    }
+
+    renderUrls();
+  </script>
+</body>
+</html>
